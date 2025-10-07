@@ -6,15 +6,60 @@ import PropTypes from "prop-types";
 import tripplannerImg from '@/assets/images/tripplanner.png';
 import upskillImg from '@/assets/images/upskilllogo.png'; 
 import geophoneImg from '@/assets/images/ML.jpeg'; 
-
+import magicalBookImg from '@/assets/images/magicalbook.png';
+import almaFlowersImg from '@/assets/images/almaflowers.png';
 const projects = [
+  {
+    title: "Magical Book — AI book generator",
+    description: "Turned a broken prototype into a working product. Focused on a clean structure, faster performance, and a simple, stable UX.",
+    points: [
+      "Rebuilt core parts and set up a clear, scalable structure.",
+      "Reduced book generation time from 3+ minutes to under 30 seconds.",
+      "Worked with two remote devs: tasks in Jira, reviews, and PRs.",
+      "Built with Node.js API and React (Vite, TailwindCSS)."
+    ],
+    link: "https://www.magical-book.com/",
+    color: "#4fd1c5",
+    src: magicalBookImg,
+    githubLink: null,
+    liveLink: "https://www.magical-book.com/",
+    tags: [
+      "React",
+      "Node.js",
+      "MongoDB",
+
+    ]
+  },
+  {
+    title: "AlmaFlowers - E-commerce Platform",
+    description: "Contributed development of 'Alma Flowers,' a complex e-commerce platform. My role focused on debugging, implementing critical fixes, and ensuring the application's stability and readiness for production.",
+    points: [
+      "Joined the project during a key phase to identify and resolve existing bugs in the full-stack application.",
+      "Contributed to the development of both client-side components using React and server-side logic with Node.js.",
+      "Worked with the existing database schema using PostgreSQL and Prisma to ensure data integrity and fix functionality issues.",
+      "Helped stabilize the platform by troubleshooting and implementing necessary improvements to get the website fully operational."
+    ],
+    src: almaFlowersImg,
+    link: "https://www.almaflowers.co.il/",
+    color: "#27F53C",
+    githubLink: null,
+    liveLink: "https://www.almaflowers.co.il/",
+    tags: [
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "Prisma",
+      "E-commerce"
+    ]
+  },
+
   {
     title: "AiTripPlanner — Full-stack AI-powered travel planner",
     description:
       "Built a scalable full-stack platform for generating AI-personalized itineraries using real-time data. Developed a dynamic chat assistant with context-aware editing and smart activity suggestions, improving user engagement. Achieved 60% backend cost savings via efficient prompt chaining and open-source AI integration. Delivered a live trip mode with real-time routing, activity tracking, and mobile-optimized UX. Containerized the app with Docker for fast deployment, portability, and consistent development environments.",
     src: tripplannerImg,
     link: tripplannerImg,
-    color: "#4fd1c5",
+    color: "#2780F5",
     githubLink: "https://github.com/Lidorpahima/AiTripPlanner",
     liveLink: "https://www.aitripplanner.online/",
     tags: [
@@ -131,7 +176,7 @@ export default function Projects() {
               <Card
                 key={`p_${i}`}
                 i={i}
-                url={project.link}
+                url={project.src}
                 title={project.title}
                 color={project.color}
                 description={project.description}
@@ -248,35 +293,57 @@ function Card({
               <div className="w-full h-[1px] bg-gray-800 mb-4 md:mb-6" />
 
               <div className="flex items-center gap-4">
-                {/* GitHub Link */}
-                <motion.a
-                  href={githubLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-2"
-                  whileHover={{ y: -3 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* GitHub Link (or Private Code label) */}
+                {githubLink ? (
+                  <motion.a
+                    href={githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2"
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 400 }}
                   >
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                  </svg>
-                  <span
-                    className="text-xs md:text-sm font-medium"
-                    style={{ color }}
-                  >
-                    Code
-                  </span>
-                </motion.a>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={color}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    <span
+                      className="text-xs md:text-sm font-medium"
+                      style={{ color }}
+                    >
+                      Code
+                    </span>
+                  </motion.a>
+                ) : (
+                  <div className="flex items-center gap-2 opacity-70 cursor-not-allowed select-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={color}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span className="text-xs md:text-sm font-medium" style={{ color }}>
+                      Private Code
+                    </span>
+                  </div>
+                )}
 
                 {/* Live Link */}
                 <motion.a
@@ -351,7 +418,7 @@ Card.propTypes = {
   progress: PropTypes.object.isRequired,
   range: PropTypes.array.isRequired,
   targetScale: PropTypes.number.isRequired,
-  githubLink: PropTypes.string.isRequired,
+  githubLink: PropTypes.string,
   liveLink: PropTypes.string.isRequired,
   tags: PropTypes.array,
 };

@@ -52,14 +52,25 @@ const ExperienceCard = ({
 );
 
 const ExperienceSection = () => {
+  const monthsSince = (year, monthIndex) => {
+    const now = new Date();
+    const start = new Date(year, monthIndex, 1);
+    const years = now.getFullYear() - start.getFullYear();
+    const months = now.getMonth() - start.getMonth();
+    const total = years * 12 + months + (now.getDate() >= 1 ? 0 : -1);
+    return Math.max(total, 0);
+  };
+
+  const expMonths = monthsSince(2025, 4); // May 2025
+
   const experiences = [
     {
       icon: Code2,
       title: "Full-Stack Developer Intern",
       company: "StealthCode",
-      period: "May 2025 - Present",
+      period: `May 2025 - Present · ${expMonths} months`,
       description:
-        "Collaborating on backend planning for MVPs and startup POCs in a fast-paced, agile environment. Implementing Next.js, React, and Node.js components, integrating MongoDB and PostgreSQL for reliable data storage.",
+        "Contributing to MVPs and POCs in an agile setup. Implementing Next.js/React and Node.js components, and working with MongoDB/PostgreSQL. Focused on clear structure, small automations, and steady performance improvements.",
     },
 
   ];
