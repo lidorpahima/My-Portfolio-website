@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./assets/css/index.css";
 import Experience from "./pages/Experience/Experience";
 import Contact from "./pages/Contact/Contact";
@@ -8,11 +8,23 @@ import Hero from "./pages/Hero/Hero";
 import Skills from "./pages/Skills/Skills";
 import Education from "./pages/Education/Education";
 
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import ScrollToTop from "./components/ui/ScrollToTop";
 
 export default function App() {
   const [isOnePage, setIsOnePage] = useState(false); // Toggle state
+  const location = useLocation();
+
+  // Manual pageview for SPA route changes (Vercel Analytics)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && typeof window.va === "function") {
+        window.va("pageview");
+      }
+    } catch (_) {
+      // no-op
+    }
+  }, [location.pathname, location.search]);
 
   return (
     <>
