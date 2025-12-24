@@ -83,6 +83,13 @@ export default function ChatWidget() {
       }
 
       const data = await response.json();
+      console.log("Received response from API:", data);
+      
+      if (!data.message) {
+        console.error("No message in response:", data);
+        throw new Error("Invalid response format from server");
+      }
+      
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.message },

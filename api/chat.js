@@ -101,11 +101,29 @@ export default async function handler(req) {
   const isWebAPIRequest = req instanceof Request;
   const method = isWebAPIRequest ? req.method : (req.method || "GET");
   
+  // Handle CORS preflight
+  if (method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+  
   // Only allow POST requests
   if (method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { "Content-Type": "application/json" } }
+      { 
+        status: 405, 
+        headers: { 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        } 
+      }
     );
   }
 
@@ -180,6 +198,46 @@ export default async function handler(req) {
       );
     }
 
+    // Function to send notification to ntfy.sh
+    async function sendNtfyNotification(name, phone, message) {
+      const ntfyTopic = process.env.NTFY_TOPIC || "mysite";
+      const ntfyUrl = `https://ntfy.sh/${ntfyTopic}`;
+      
+      const notificationMessage = `New message from portfolio website:
+
+Name: ${name}
+Phone: ${phone}
+Message: ${message}
+
+Time: ${new Date().toISOString()}`;
+      
+      try {
+        console.log(`Sending notification to ntfy.sh topic: ${ntfyTopic}`);
+        const response = await fetch(ntfyUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain",
+            "Title": "📧 New Contact from Portfolio",
+            "Priority": "default",
+            "Tags": "envelope,email",
+          },
+          body: notificationMessage,
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "Unknown error");
+          console.error("Ntfy error:", response.status, response.statusText, errorText);
+          return false;
+        }
+        
+        console.log("Notification sent successfully to ntfy.sh");
+        return true;
+      } catch (error) {
+        console.error("Error sending notification:", error);
+        return false;
+      }
+    }
+
     // Build system instruction with RAG knowledge base
     const systemInstruction = `You are a professional AI assistant for Lidor Pahima's portfolio website. Your role is to help visitors learn about Lidor and answer questions about his background, experience, projects, and skills.
 
@@ -194,6 +252,15 @@ INSTRUCTIONS:
 5. Always respond in English unless the user specifically asks in another language
 6. When discussing achievements, mention specific numbers and metrics when available
 7. Encourage visitors to check out Lidor's projects and contact him for collaboration opportunities
+
+IMPORTANT - CONTACT REQUEST HANDLING:
+If a user wants to contact Lidor, send a message, leave details, get in touch, wants to work together, or wants to hire Lidor, you should:
+1. First, ask for their name: "What's your name?"
+2. Once you have the name, ask for their phone number: "What's your phone number?"
+3. Once you have both name and phone, ask for their message: "What would you like to tell Lidor?"
+4. Once you have all three pieces of information (name, phone, message), you MUST respond with EXACTLY this format: "CONTACT_REQUEST:name|phone|message" (replace name, phone, and message with the actual values the user provided)
+5. Do NOT include any other text before or after the CONTACT_REQUEST line when you have all the information
+6. The format must be exactly: CONTACT_REQUEST:John Doe|+1234567890|Hello, I want to work with you
 
 Remember: You are representing Lidor professionally, so be accurate and helpful.`;
 
@@ -320,15 +387,47 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
         const data = await geminiResponse.json();
         console.log("Gemini response received, extracting text...");
         
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+        let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
         console.log("Response text length:", responseText.length);
+        console.log("Response text preview:", responseText.substring(0, 50));
+
+        // Check if this is a contact request
+        if (responseText.includes("CONTACT_REQUEST:")) {
+          console.log("Contact request detected, processing...");
+          const contactMatch = responseText.match(/CONTACT_REQUEST:([^|]+)\|([^|]+)\|(.+)/);
+          
+          if (contactMatch) {
+            const [, name, phone, message] = contactMatch;
+            console.log("Contact details:", { name, phone, message: message.substring(0, 50) });
+            
+            // Send notification to ntfy.sh
+            const notificationSent = await sendNtfyNotification(
+              name.trim(),
+              phone.trim(),
+              message.trim()
+            );
+            
+            if (notificationSent) {
+              // Replace the CONTACT_REQUEST with a confirmation message
+              responseText = `Thank you ${name}! Your message has been sent successfully. Lidor will get back to you soon at ${phone}.`;
+            } else {
+              responseText = "Thank you for your message! However, there was an issue sending it. Please try contacting Lidor directly through the contact page.";
+            }
+          }
+        }
+
+        const responseBody = JSON.stringify({ message: responseText });
+        console.log("Sending response, body length:", responseBody.length);
 
         return new Response(
-          JSON.stringify({ message: responseText }),
+          responseBody,
           { 
             status: 200, 
             headers: { 
               "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
               "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
               "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
               "X-RateLimit-Reset": rateLimitResult.resetTime.toString()
@@ -349,7 +448,13 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
       JSON.stringify({ 
         error: error.message || "An error occurred while processing your request." 
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { 
+        status: 500, 
+        headers: { 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        } 
+      }
     );
   }
 }

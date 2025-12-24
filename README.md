@@ -189,9 +189,20 @@ Create a `.env` file in the root directory:
 ```bash
 # Google Gemini API
 GEMINI_API_KEY=your_gemini_api_key_here
+
+# Ntfy.sh topic for receiving contact messages (optional)
+# If not set, defaults to "mysite"
+NTFY_TOPIC=mysite
 ```
 
 **Important:** Make sure the `.env` file is in the root directory (same level as `package.json`).
+
+**Ntfy.sh Setup (Optional):**
+If you want to receive contact messages via ntfy.sh:
+1. Go to [ntfy.sh](https://ntfy.sh) and create a topic (or use an existing one)
+2. Set `NTFY_TOPIC` to your topic name
+3. When users want to contact you through the chat, the AI will collect their name, phone, and message
+4. You'll receive a notification on your ntfy.sh topic
 
 ### 3. Local Development
 
@@ -219,7 +230,8 @@ When deploying to Vercel:
 1. Go to your project settings
 2. Navigate to "Environment Variables"
 3. Add your API key as `GEMINI_API_KEY`
-4. Redeploy your application
+4. (Optional) Add `NTFY_TOPIC` if you want to receive contact messages
+5. Redeploy your application
 
 The chat widget will automatically appear as a floating button in the bottom-right corner of all pages.
 
@@ -230,6 +242,7 @@ The chat widget will automatically appear as a floating button in the bottom-rig
 - ✅ Powered by Google Gemini
 - ✅ Professional and helpful responses
 - ✅ Rate limiting to prevent abuse (10 requests per minute per IP)
+- ✅ Contact form integration - AI can collect contact details and send to ntfy.sh
 
 **Rate Limiting:**
 The chat API includes rate limiting to prevent abuse:
