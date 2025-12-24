@@ -8,6 +8,7 @@ import upskillImg from '@/assets/images/upskilllogo.png';
 import geophoneImg from '@/assets/images/ML.jpeg'; 
 import magicalBookImg from '@/assets/images/magicalbook.png';
 import almaFlowersImg from '@/assets/images/almaflowers.png';
+import flowChatImg from '@/assets/images/flowchat.png';
 const projects = [
   {
     title: "Magical Book — AI book generator",
@@ -52,7 +53,22 @@ const projects = [
       "E-commerce"
     ]
   },
-
+  {
+    title: "FlowChat - Chatbot for Customers Support",
+    description: "Developed a chatbot for customers support using React, Node.js, and PostgreSQL. The chatbot is able to answer questions about the products and services offered by the company.",
+    src: flowChatImg,
+    link: "https://www.flowchat.biz/",
+    color: "#27F53C",
+    githubLink: null,
+    liveLink: "https://www.flowchat.biz/",
+    tags: [
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "OpenAI",
+      "Chatbot"
+    ]
+  },
   {
     title: "AiTripPlanner — Full-stack AI-powered travel planner",
     description:

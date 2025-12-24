@@ -26,6 +26,9 @@ import {
   SiFirebase,
   SiVercel,
   SiVite,
+  SiJavascript,
+  SiDigitalocean,
+  SiJira,
 } from "react-icons/si";
 import { TbBrandVscode } from "react-icons/tb";
 import { BsFileEarmarkCode, BsGrid1X2 } from "react-icons/bs";
@@ -71,6 +74,7 @@ const SkillsSection = () => {
       title: "Full Stack & Web",
       color: "text-blue-400",
       skills: [
+        { name: "JavaScript", icon: <SiJavascript className="w-4 h-4 text-[#F7DF1E]" /> },
         { name: "React", icon: <FaReact className="w-4 h-4 text-[#61DAFB]" /> },
         { name: "Next.js", icon: <SiNextdotjs className="w-4 h-4 text-white" /> },
         { name: "TypeScript", icon: <SiTypescript className="w-4 h-4 text-[#3178C6]" /> },
@@ -87,12 +91,13 @@ const SkillsSection = () => {
       color: "text-green-400",
       skills: [
         { name: "Python", icon: <FaPython className="w-4 h-4 text-[#3776AB]" /> },
-        { name: "Django", icon: <BsGrid1X2 className="w-4 h-4 text-[#092E20]" /> },
+        { name: "Django REST", icon: <BsGrid1X2 className="w-4 h-4 text-[#092E20]" /> },
         { name: "FastAPI", icon: <BsGrid1X2 className="w-4 h-4 text-[#009688]" /> },
         { name: "Node.js", icon: <FaNodeJs className="w-4 h-4 text-[#339933]" /> },
         { name: "PostgreSQL", icon: <SiPostgresql className="w-4 h-4 text-[#336791]" /> },
-        { name: "Redis", icon: <BsGrid1X2 className="w-4 h-4 text-[#DC382D]" /> },
         { name: "MongoDB", icon: <SiMongodb className="w-4 h-4 text-[#47A248]" /> },
+        { name: "Redis", icon: <BsGrid1X2 className="w-4 h-4 text-[#DC382D]" /> },
+        { name: "SQL", icon: <BsGrid1X2 className="w-4 h-4 text-[#336791]" /> },
       ],
     },
     {
@@ -102,6 +107,9 @@ const SkillsSection = () => {
       skills: [
         { name: "PyTorch", icon: <BsGrid1X2 className="w-4 h-4 text-[#EE4C2C]" /> },
         { name: "TensorFlow", icon: <BsGrid1X2 className="w-4 h-4 text-[#FF6F00]" /> },
+        { name: "LLM Integration", icon: <BsGrid1X2 className="w-4 h-4 text-[#8B5CF6]" /> },
+        { name: "Model Optimization", icon: <BsGrid1X2 className="w-4 h-4 text-[#10B981]" /> },
+        { name: "CNN", icon: <BsGrid1X2 className="w-4 h-4 text-[#2196F3]" /> },
         { name: "Scikit-learn", icon: <BsGrid1X2 className="w-4 h-4 text-[#F7931E]" /> },
         { name: "NLP", icon: <BsGrid1X2 className="w-4 h-4 text-[#4CAF50]" /> },
         { name: "Computer Vision", icon: <BsGrid1X2 className="w-4 h-4 text-[#2196F3]" /> },
@@ -117,6 +125,8 @@ const SkillsSection = () => {
         { name: "Docker", icon: <FaDocker className="w-4 h-4 text-[#2496ED]" /> },
         { name: "Git", icon: <FaGitAlt className="w-4 h-4 text-[#F05032]" /> },
         { name: "Linux", icon: <FaLinux className="w-4 h-4 text-[#FCC624]" /> },
+        { name: "DigitalOcean", icon: <SiDigitalocean className="w-4 h-4 text-[#0080FF]" /> },
+        { name: "Jira", icon: <SiJira className="w-4 h-4 text-[#0052CC]" /> },
         { name: "CI/CD", icon: <FcWorkflow className="w-4 h-4" /> },
         { name: "VS Code", icon: <TbBrandVscode className="w-4 h-4 text-[#007ACC]" /> },
         { name: "Postman", icon: <BsGrid1X2 className="w-4 h-4 text-[#FF6C37]" /> },

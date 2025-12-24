@@ -10,6 +10,7 @@ import Education from "./pages/Education/Education";
 
 import { Route, Routes, useLocation } from "react-router-dom";
 import ScrollToTop from "./components/ui/ScrollToTop";
+import ChatWidget from "./components/ui/chat-widget";
 
 export default function App() {
   const [isOnePage, setIsOnePage] = useState(false); // Toggle state
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <>
       <Header />
+      <ChatWidget />
       {/* Conditional Rendering */}
       {isOnePage ? (
         // One-Page Mode: Render all components together

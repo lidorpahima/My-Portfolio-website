@@ -5,8 +5,8 @@ export default function About() {
     <>
       <section id="about" className="py-16 md:py-32  text-white bg-[#04081A]">
         <div className="mx-auto max-w-5xl space-y-8 px-6 md:space-y-16">
-          <h2 className="relative z-10 max-w-xl text-4xl font-medium lg:text-5xl text-white">
-            Junior Full‑Stack Developer • AI & Automation
+          <h2 className="relative z-10 text-4xl font-medium lg:text-5xl text-white">
+            Full‑Stack Developer • AI Engineer
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 md:gap-12 lg:gap-24">
             <div className="relative mb-6 sm:mb-0">
@@ -23,21 +23,21 @@ export default function About() {
 
             <div className="relative space-y-4">
               <p className="text-white">
-                Hello! I&apos;m Lidor Pahima, a junior Full‑Stack Developer who recently completed a B.Sc. in Computer Science (AI major). I like building clean, reliable systems and keeping things simple and maintainable.
+                Hello! I&apos;m Lidor Pahima, a Full‑Stack Developer experienced in Node.js, React, TypeScript, and GenAI platforms. I recently completed my B.Sc. in Computer Science with a specialization in Artificial Intelligence from SCE. I&apos;m passionate about building scalable systems and optimizing performance to deliver real business value.
               </p>
               <p className="text-white">
-                I work across frontend and backend with Python, JavaScript/TypeScript, and modern web tools. I enjoy small automations that save time, and I&apos;m currently gaining hands‑on experience building MVPs and improving performance.
+                Currently working at StealthCode, I&apos;ve focused on developing GenAI platforms and e-commerce solutions. I enjoy tackling complex challenges from refactoring workflows to reduce processing time, to scaling systems to handle thousands of daily requests, and optimizing infrastructure costs. My approach combines technical expertise with a focus on measurable results.
               </p>
 
               <div className="pt-6">
                 <blockquote className="border-l-4 border-gray-300 pl-4">
                   <p className="text-white">
-                    I&apos;m excited about using AI where it makes sense and focusing on real, measurable improvements—better load times, clearer structure, and a smoother user experience.
+                    I&apos;m driven by the intersection of Full‑Stack development and AI engineering. Whether it&apos;s building intelligent systems that process thousands of requests efficiently, or optimizing costs while maintaining performance, I strive to create solutions that make a real impact.
                   </p>
 
                   <div className="mt-6 space-y-3">
                     <cite className="block font-medium text-white">
-                      Lidor Pahima, Full‑Stack Developer
+                      Lidor Pahima, Full‑Stack Developer & AI Engineer
                     </cite>
 
                   </div>

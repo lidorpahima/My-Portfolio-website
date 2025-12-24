@@ -118,6 +118,7 @@ The portfolio website consists of the following sections:
 - **Styling:** Tailwind CSS
 - **Animations:** Framer Motion
 - **Icons:** React Icons
+- **AI Chat:** LLM Integration (OpenAI/Anthropic)
 - **Deployment:** Vercel
 
 ---
@@ -172,6 +173,73 @@ npm run dev
 
 View the Project 🌐
 Open your browser and visit http://localhost:5173/ to see the result! 🎉
+
+---
+
+## 🤖 AI Chat Widget Setup
+
+The portfolio includes an AI-powered chat widget with RAG (Retrieval Augmented Generation) that appears on all pages. The chat uses Google Gemini and has built-in knowledge about Lidor's background, experience, and projects.
+
+### 1. Get a Gemini API Key
+Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory:
+
+```bash
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+**Important:** Make sure the `.env` file is in the root directory (same level as `package.json`).
+
+### 3. Local Development
+
+**✅ Good News:** The chat widget now works in local development! A Vite plugin handles API routes automatically.
+
+**To run locally:**
+```bash
+# Make sure you have GEMINI_API_KEY in your .env file
+npm run dev
+```
+
+The API route `/api/chat` will be automatically handled by the Vite plugin.
+
+**Note:** If you prefer using Vercel CLI:
+```bash
+# Install Vercel CLI globally
+npm i -g vercel
+
+# Run Vercel dev server
+vercel dev
+```
+
+### 4. Deploy to Vercel
+When deploying to Vercel:
+1. Go to your project settings
+2. Navigate to "Environment Variables"
+3. Add your API key as `GEMINI_API_KEY`
+4. Redeploy your application
+
+The chat widget will automatically appear as a floating button in the bottom-right corner of all pages.
+
+**Features:**
+- ✅ Responsive design (mobile-friendly)
+- ✅ RAG (Retrieval Augmented Generation) with knowledge base about Lidor
+- ✅ Conversation history saved in localStorage
+- ✅ Powered by Google Gemini
+- ✅ Professional and helpful responses
+- ✅ Rate limiting to prevent abuse (10 requests per minute per IP)
+
+**Rate Limiting:**
+The chat API includes rate limiting to prevent abuse:
+- **Default**: 10 requests per minute per IP address
+- **Configurable**: Set `RATE_LIMIT_MAX_REQUESTS` and `RATE_LIMIT_WINDOW_MS` in environment variables
+- **Response**: Returns 429 status with `Retry-After` header when limit is exceeded
+
+**Note**: The API route is located at `/api/chat.js` and uses Vercel Serverless Functions. The knowledge base includes information about Lidor's experience, projects, skills, and achievements.
+
+---
 
 ## 📝 License
 This project is licensed under the MIT License - see the LICENSE file for details.
