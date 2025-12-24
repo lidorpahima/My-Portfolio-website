@@ -531,29 +531,36 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
         }
 
         const responseBody = JSON.stringify({ message: responseText });
-        console.log("Sending response, body length:", responseBody.length);
+        const responseBodyBytes = new TextEncoder().encode(responseBody);
+        console.log("Sending response, body length:", responseBody.length, "bytes:", responseBodyBytes.length);
         console.log("Response body preview:", responseBody.substring(0, 200));
 
         const responseHeaders = {
           "Content-Type": "application/json; charset=utf-8",
+          "Content-Length": responseBodyBytes.length.toString(),
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
           "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
           "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
           "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
-          "Cache-Control": "no-cache",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Connection": "close",
         };
 
         console.log("Response headers:", responseHeaders);
+        console.log("Returning response now...");
 
-        return new Response(
+        const finalResponse = new Response(
           responseBody,
           { 
             status: 200, 
             headers: responseHeaders
           }
         );
+        
+        console.log("Response created, returning...");
+        return finalResponse;
       } catch (fetchError) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {

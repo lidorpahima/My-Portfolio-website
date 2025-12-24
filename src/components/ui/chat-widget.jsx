@@ -112,8 +112,10 @@ export default function ChatWidget() {
         throw fetchError;
       }
 
-      console.log("Response status:", response.status, response.statusText);
+      console.log("Response received! Status:", response.status, response.statusText);
+      console.log("Response ok:", response.ok);
       console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+      console.log("Response bodyUsed:", response.bodyUsed);
       
       if (!response.ok) {
         // Handle rate limiting
@@ -127,9 +129,10 @@ export default function ChatWidget() {
       }
 
       // Read response as text first to debug
+      console.log("Reading response body...");
       const responseText = await response.text();
       console.log("Response text received, length:", responseText.length);
-      console.log("Response text preview:", responseText.substring(0, 200));
+      console.log("Response text:", responseText);
       
       let data;
       try {
