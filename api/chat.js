@@ -249,18 +249,24 @@ INSTRUCTIONS:
 2. If asked about Lidor's experience, projects, skills, or achievements, provide specific details from the knowledge base
 3. Be professional, friendly, and concise
 4. If you don't know something specific, say so honestly
-5. Always respond in English unless the user specifically asks in another language
 6. When discussing achievements, mention specific numbers and metrics when available
 7. Encourage visitors to check out Lidor's projects and contact him for collaboration opportunities
 
 IMPORTANT - CONTACT REQUEST HANDLING:
-If a user wants to contact Lidor, send a message, leave details, get in touch, wants to work together, or wants to hire Lidor, you should:
-1. First, ask for their name: "What's your name?"
-2. Once you have the name, ask for their phone number: "What's your phone number?"
-3. Once you have both name and phone, ask for their message: "What would you like to tell Lidor?"
+If a user wants to contact Lidor, send a message, leave details, get in touch, wants to work together, or wants to hire Lidor (in any language - English or Hebrew), you should:
+1. First, ask for their name in the same language they're using:
+   - English: "What's your name?"
+   - Hebrew: "מה השם שלך?"
+2. Once you have the name, ask for their phone number in the same language:
+   - English: "What's your phone number?"
+   - Hebrew: "מה מספר הטלפון שלך?"
+3. Once you have both name and phone, ask for their message in the same language:
+   - English: "What would you like to tell Lidor?"
+   - Hebrew: "מה תרצה לספר ללידור?"
 4. Once you have all three pieces of information (name, phone, message), you MUST respond with EXACTLY this format: "CONTACT_REQUEST:name|phone|message" (replace name, phone, and message with the actual values the user provided)
 5. Do NOT include any other text before or after the CONTACT_REQUEST line when you have all the information
 6. The format must be exactly: CONTACT_REQUEST:John Doe|+1234567890|Hello, I want to work with you
+7. After sending the contact request, confirm in the user's language that the message was sent successfully
 
 Remember: You are representing Lidor professionally, so be accurate and helpful.`;
 
@@ -268,33 +274,102 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
     // Gemini uses a different format - we need to convert the messages
     // Only send the last few messages to avoid token limits (keep last 10 messages)
     // Filter out error messages that might confuse the AI
-    const cleanedMessages = messages.filter(msg => 
-      msg.content && 
-      !msg.content.includes("Sorry, there was an error") &&
-      !msg.content.includes("Failed to get response") &&
-      msg.content.trim().length > 0
-    );
+    console.log("Raw messages received:", JSON.stringify(messages).substring(0, 500));
+    
+    const cleanedMessages = messages.filter(msg => {
+      if (!msg || !msg.content) return false;
+      const content = String(msg.content).trim();
+      if (content.length === 0) return false;
+      if (content.includes("Sorry, there was an error")) return false;
+      if (content.includes("Failed to get response")) return false;
+      return true;
+    });
     
     const recentMessages = cleanedMessages.slice(-10);
     console.log("Preparing messages, total:", messages.length, "cleaned:", cleanedMessages.length, "recent:", recentMessages.length);
     
+    // Ensure we start with assistant greeting if no messages
     if (recentMessages.length === 0) {
-      // If no valid messages, start fresh
       recentMessages.push({
         role: "user",
         content: "Hello"
       });
     }
     
-    const geminiMessages = recentMessages.map((msg) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }],
-    }));
+    // Ensure first message is from assistant (greeting) or user
+    // If first message is user, we need to add context
+    const geminiMessages = recentMessages.map((msg, index) => {
+      const role = msg.role === "assistant" ? "model" : "user";
+      const content = String(msg.content || "").trim();
+      
+      if (!content) {
+        console.warn(`Empty message at index ${index}, skipping`);
+        return null;
+      }
+      
+      return {
+        role: role,
+        parts: [{ text: content }],
+      };
+    }).filter(msg => msg !== null);
+    
+    // Validate that we have valid messages
+    if (geminiMessages.length === 0) {
+      console.error("No valid messages after processing, using default");
+      geminiMessages.push({
+        role: "user",
+        parts: [{ text: "Hello" }],
+      });
+    }
     
     console.log("Gemini messages count:", geminiMessages.length);
-    console.log("First message:", geminiMessages[0]?.parts[0]?.text?.substring(0, 50));
-    console.log("Last message:", geminiMessages[geminiMessages.length - 1]?.parts[0]?.text?.substring(0, 50));
+    console.log("All messages roles:", geminiMessages.map(m => m.role).join(", "));
+    console.log("First message:", geminiMessages[0]?.parts[0]?.text?.substring(0, 100));
+    console.log("Last message:", geminiMessages[geminiMessages.length - 1]?.parts[0]?.text?.substring(0, 100));
+    
+    // Validate messages format
+    for (let i = 0; i < geminiMessages.length; i++) {
+      const msg = geminiMessages[i];
+      if (!msg.role || !msg.parts || !msg.parts[0] || !msg.parts[0].text) {
+        console.error(`Invalid message at index ${i}:`, msg);
+      }
+    }
 
+    // Ensure we have at least one user message and conversation makes sense
+    const hasUserMessage = geminiMessages.some(msg => msg.role === "user");
+    const hasModelMessage = geminiMessages.some(msg => msg.role === "model");
+    
+    // Filter out messages that are too short (likely corrupted)
+    const validGeminiMessages = geminiMessages.filter(msg => {
+      const text = msg.parts[0]?.text || "";
+      // Filter out messages shorter than 2 characters (likely corrupted)
+      if (text.length < 2) {
+        console.warn("Filtering out message too short:", text);
+        return false;
+      }
+      return true;
+    });
+    
+    // If we filtered out too many messages, reset
+    if (validGeminiMessages.length === 0 || (!hasUserMessage && validGeminiMessages.length > 0)) {
+      console.warn("No valid user messages found, resetting conversation");
+      geminiMessages.length = 0;
+      geminiMessages.push({
+        role: "user",
+        parts: [{ text: "Hello" }],
+      });
+    } else {
+      // Use filtered messages
+      geminiMessages.length = 0;
+      geminiMessages.push(...validGeminiMessages);
+    }
+    
+    // Ensure conversation alternates properly (user -> model -> user -> model)
+    // If last message is from model, we need a user message
+    if (geminiMessages.length > 0 && geminiMessages[geminiMessages.length - 1].role === "model") {
+      console.warn("Last message is from model, conversation might be incomplete");
+    }
+    
     // Call Gemini API with system instruction
     const requestBody = {
       contents: geminiMessages,
@@ -310,6 +385,8 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
     };
     
     console.log("Request body size:", JSON.stringify(requestBody).length, "characters");
+    console.log("System instruction length:", systemInstruction.length);
+    console.log("Contents count:", requestBody.contents.length);
 
     async function getCheapestModel(apiKey) {
         // Use environment variable if set, otherwise try to fetch

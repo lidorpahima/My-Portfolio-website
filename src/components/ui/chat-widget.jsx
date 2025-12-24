@@ -73,16 +73,25 @@ export default function ChatWidget() {
     try {
       // Use Vercel serverless function
       const apiUrl = import.meta.env.VITE_API_URL || "/api/chat";
+      
+      // Prepare messages - ensure they're valid
+      const messagesToSend = [...messages, userMessage]
+        .filter(msg => msg && msg.role && msg.content && String(msg.content).trim().length > 0)
+        .map((msg) => ({
+          role: msg.role,
+          content: String(msg.content).trim(),
+        }));
+      
+      console.log("Sending messages to API:", messagesToSend.length, "messages");
+      console.log("Last message content:", messagesToSend[messagesToSend.length - 1]?.content);
+      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
+          messages: messagesToSend,
         }),
       });
 
