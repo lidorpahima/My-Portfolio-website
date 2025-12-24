@@ -267,11 +267,33 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
     // Prepare messages for Gemini API
     // Gemini uses a different format - we need to convert the messages
     // Only send the last few messages to avoid token limits (keep last 10 messages)
-    const recentMessages = messages.slice(-10);
+    // Filter out error messages that might confuse the AI
+    const cleanedMessages = messages.filter(msg => 
+      msg.content && 
+      !msg.content.includes("Sorry, there was an error") &&
+      !msg.content.includes("Failed to get response") &&
+      msg.content.trim().length > 0
+    );
+    
+    const recentMessages = cleanedMessages.slice(-10);
+    console.log("Preparing messages, total:", messages.length, "cleaned:", cleanedMessages.length, "recent:", recentMessages.length);
+    
+    if (recentMessages.length === 0) {
+      // If no valid messages, start fresh
+      recentMessages.push({
+        role: "user",
+        content: "Hello"
+      });
+    }
+    
     const geminiMessages = recentMessages.map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
+    
+    console.log("Gemini messages count:", geminiMessages.length);
+    console.log("First message:", geminiMessages[0]?.parts[0]?.text?.substring(0, 50));
+    console.log("Last message:", geminiMessages[geminiMessages.length - 1]?.parts[0]?.text?.substring(0, 50));
 
     // Call Gemini API with system instruction
     const requestBody = {
@@ -286,6 +308,8 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
         maxOutputTokens: 1024,
       },
     };
+    
+    console.log("Request body size:", JSON.stringify(requestBody).length, "characters");
 
     async function getCheapestModel(apiKey) {
         // Use environment variable if set, otherwise try to fetch
@@ -385,11 +409,24 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
 
         console.log("Parsing Gemini response...");
         const data = await geminiResponse.json();
+        console.log("Gemini response structure:", JSON.stringify(data).substring(0, 200));
         console.log("Gemini response received, extracting text...");
         
-        let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+        // Check if response has candidates
+        if (!data.candidates || data.candidates.length === 0) {
+          console.error("No candidates in Gemini response:", data);
+          throw new Error("No response candidates from Gemini API");
+        }
+        
+        // Check if candidate has content
+        if (!data.candidates[0].content || !data.candidates[0].content.parts) {
+          console.error("No content parts in Gemini response:", data.candidates[0]);
+          throw new Error("Invalid response structure from Gemini API");
+        }
+        
+        let responseText = data.candidates[0].content.parts[0]?.text || "Sorry, I couldn't generate a response.";
         console.log("Response text length:", responseText.length);
-        console.log("Response text preview:", responseText.substring(0, 50));
+        console.log("Response text preview:", responseText.substring(0, 100));
 
         // Check if this is a contact request
         if (responseText.includes("CONTACT_REQUEST:")) {

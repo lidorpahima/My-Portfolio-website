@@ -8,7 +8,22 @@ export default function ChatWidget() {
     const saved = localStorage.getItem("chatMessages");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Filter out error messages from previous sessions
+        const cleaned = parsed.filter(msg => 
+          !msg.content?.includes("Sorry, there was an error") &&
+          !msg.content?.includes("Failed to get response")
+        );
+        // If we filtered everything, start fresh
+        if (cleaned.length === 0) {
+          return [
+            {
+              role: "assistant",
+              content: "Hello! I'm Lidor's AI assistant. How can I help you today?",
+            },
+          ];
+        }
+        return cleaned;
       } catch {
         return [
           {
