@@ -85,20 +85,40 @@ export default function ChatWidget() {
       console.log("Sending messages to API:", messagesToSend.length, "messages");
       console.log("Last message content:", messagesToSend[messagesToSend.length - 1]?.content);
       
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: messagesToSend,
-        }),
-      });
+      // Add timeout to fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+      
+      let response;
+      try {
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: messagesToSend,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.error("Request timeout in frontend");
+          throw new Error("Request timeout. The server took too long to respond.");
+        }
+        throw fetchError;
+      }
 
+      console.log("Response status:", response.status, response.statusText);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
         // Handle rate limiting
         if (response.status === 429) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           const retryAfter = errorData.retryAfter || 60;
           throw new Error(`Rate limit exceeded. Please wait ${retryAfter} seconds before trying again.`);
         }
@@ -106,20 +126,38 @@ export default function ChatWidget() {
         throw new Error(errorData.error || "Failed to get response");
       }
 
-      const data = await response.json();
-      console.log("Received response from API:", data);
+      // Read response as text first to debug
+      const responseText = await response.text();
+      console.log("Response text received, length:", responseText.length);
+      console.log("Response text preview:", responseText.substring(0, 200));
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log("Parsed response data:", data);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        console.error("Response text:", responseText);
+        throw new Error("Invalid JSON response from server");
+      }
       
       if (!data.message) {
         console.error("No message in response:", data);
         throw new Error("Invalid response format from server");
       }
       
+      console.log("Setting assistant message:", data.message.substring(0, 50));
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.message },
       ]);
     } catch (error) {
       console.error("Chat error:", error);
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
       const errorMessage = error.message || "Unknown error occurred";
       setMessages((prev) => [
         ...prev,

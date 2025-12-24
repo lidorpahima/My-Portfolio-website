@@ -532,20 +532,26 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
 
         const responseBody = JSON.stringify({ message: responseText });
         console.log("Sending response, body length:", responseBody.length);
+        console.log("Response body preview:", responseBody.substring(0, 200));
+
+        const responseHeaders = {
+          "Content-Type": "application/json; charset=utf-8",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+          "Cache-Control": "no-cache",
+        };
+
+        console.log("Response headers:", responseHeaders);
 
         return new Response(
           responseBody,
           { 
             status: 200, 
-            headers: { 
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-              "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-              "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-              "X-RateLimit-Reset": rateLimitResult.resetTime.toString()
-            }
+            headers: responseHeaders
           }
         );
       } catch (fetchError) {
