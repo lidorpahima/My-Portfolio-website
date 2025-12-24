@@ -116,6 +116,8 @@ export default function ChatWidget() {
       console.log("Response ok:", response.ok);
       console.log("Response headers:", Object.fromEntries(response.headers.entries()));
       console.log("Response bodyUsed:", response.bodyUsed);
+      console.log("Response type:", response.type);
+      console.log("Response redirected:", response.redirected);
       
       if (!response.ok) {
         // Handle rate limiting
@@ -130,9 +132,15 @@ export default function ChatWidget() {
 
       // Read response as text first to debug
       console.log("Reading response body...");
-      const responseText = await response.text();
-      console.log("Response text received, length:", responseText.length);
-      console.log("Response text:", responseText);
+      let responseText;
+      try {
+        responseText = await response.text();
+        console.log("Response text received, length:", responseText.length);
+        console.log("Response text:", responseText);
+      } catch (textError) {
+        console.error("Error reading response text:", textError);
+        throw new Error("Failed to read response from server");
+      }
       
       let data;
       try {

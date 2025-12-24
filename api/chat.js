@@ -531,13 +531,11 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
         }
 
         const responseBody = JSON.stringify({ message: responseText });
-        const responseBodyBytes = new TextEncoder().encode(responseBody);
-        console.log("Sending response, body length:", responseBody.length, "bytes:", responseBodyBytes.length);
-        console.log("Response body preview:", responseBody.substring(0, 200));
+        console.log("Sending response, body length:", responseBody.length);
+        console.log("Response body:", responseBody);
 
         const responseHeaders = {
           "Content-Type": "application/json; charset=utf-8",
-          "Content-Length": responseBodyBytes.length.toString(),
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
@@ -545,21 +543,27 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
           "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
           "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
           "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Connection": "close",
         };
 
         console.log("Response headers:", responseHeaders);
         console.log("Returning response now...");
 
+        // Return response as string (Vercel handles encoding automatically)
+        // Ensure we're returning a proper Response object
         const finalResponse = new Response(
           responseBody,
           { 
             status: 200, 
+            statusText: "OK",
             headers: responseHeaders
           }
         );
         
-        console.log("Response created, returning...");
+        console.log("Response created successfully");
+        console.log("Response type:", finalResponse.constructor.name);
+        console.log("Response body:", finalResponse.body ? "present" : "missing");
+        
+        // Ensure response is fully sent
         return finalResponse;
       } catch (fetchError) {
         clearTimeout(timeoutId);
