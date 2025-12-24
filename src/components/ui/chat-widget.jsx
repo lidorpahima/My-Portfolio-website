@@ -4,6 +4,7 @@ import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   // Load messages from localStorage on mount
+  
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem("chatMessages");
     if (saved) {
@@ -59,6 +60,18 @@ export default function ChatWidget() {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   const handleSend = async (e) => {
@@ -198,7 +211,7 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 w-full h-full sm:w-96 sm:h-[600px] sm:rounded-2xl bg-[#0a0e1a] border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 w-full h-[100dvh] sm:h-[600px] sm:w-96 sm:inset-auto sm:bottom-6 sm:right-6 sm:rounded-2xl bg-[#0a0e1a] border border-gray-700 shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -268,7 +281,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSend} className="p-3 sm:p-4 border-t border-gray-700 bg-[#0a0e1a] flex-shrink-0" dir="ltr">
+          <form onSubmit={handleSend} className="p-3 sm:p-4 border-t border-gray-700 bg-[#0a0e1a] flex-shrink-0 safe-area-bottom" dir="ltr">
             <div className="flex gap-2">
               <input
                 ref={inputRef}

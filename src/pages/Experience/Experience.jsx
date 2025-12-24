@@ -68,7 +68,7 @@ const ExperienceSection = () => {
       icon: Code2,
       title: "Full-Stack Developer Intern",
       company: "StealthCode",
-      period: `May 2025 - Present · ${expMonths} months`,
+      period: `May 2025 - Present`,
       description:
         "Contributing to MVPs and POCs in an agile setup. Implementing Next.js/React and Node.js components, and working with MongoDB/PostgreSQL. Focused on clear structure, small automations, and steady performance improvements.",
     },
