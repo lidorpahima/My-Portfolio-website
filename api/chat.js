@@ -95,107 +95,50 @@ ASPIRATION:
 Aspiring to become a Full-Stack / AI Engineer, combining expertise in software development with advanced AI/ML capabilities.
 `;
 
-export default async function handler(req) {
-  // Handle both Vercel (Web API Request) and local development formats
-  // Vercel uses Web API Request object, local dev uses custom format
-  const isWebAPIRequest = req instanceof Request;
-  const method = isWebAPIRequest ? req.method : (req.method || "GET");
-  
-  // Handle CORS preflight
-  if (method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    });
-  }
-  
-  // Only allow POST requests
-  if (method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { 
-        status: 405, 
-        headers: { 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        } 
-      }
-    );
+export default async function handler(req, res) {
+  // 1. הגדרת CORS Headers כבר בהתחלה
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // 2. טיפול ב-OPTIONS (Preflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  // Rate limiting
-  const clientId = getClientIdentifier(req);
-  // Allow 10 requests per minute per IP
-  const rateLimitConfig = {
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "10"),
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000"), // 1 minute
-  };
-  
-  const rateLimitResult = rateLimit(clientId, rateLimitConfig.maxRequests, rateLimitConfig.windowMs);
-  
-  if (!rateLimitResult.allowed) {
-    return new Response(
-      JSON.stringify({ 
-        error: "Rate limit exceeded. Please try again later.",
-        retryAfter: rateLimitResult.retryAfter,
-        resetTime: new Date(rateLimitResult.resetTime).toISOString()
-      }),
-      { 
-        status: 429,
-        headers: { 
-          "Content-Type": "application/json",
-          "Retry-After": rateLimitResult.retryAfter.toString(),
-          "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": rateLimitResult.resetTime.toString()
-        }
-      }
-    );
+  // 3. ווידוא שזה POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Handle body parsing for both Web API Request and custom format
-    let body;
-    if (isWebAPIRequest) {
-      // Vercel production - Web API Request (has json() method)
-      try {
-        body = await req.json();
-      } catch (error) {
-        // If json() fails, try to read as text and parse
-        const text = await req.text();
-        body = text ? JSON.parse(text) : {};
-      }
-    } else if (typeof req.json === "function") {
-      // Local development - custom format with json() method
-      body = await req.json();
-    } else {
-      // Fallback - body might already be parsed
-      body = req.body || {};
-    }
+    // 4. Rate Limiting
+    const clientId = getClientIdentifier(req);
+    const rateLimitConfig = {
+      maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "10"),
+      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000"),
+    };
     
-    const { messages } = body;
+    const rateLimitResult = rateLimit(clientId, rateLimitConfig.maxRequests, rateLimitConfig.windowMs);
+    
+    if (!rateLimitResult.allowed) {
+      res.setHeader('Retry-After', rateLimitResult.retryAfter);
+      return res.status(429).json({
+        error: "Rate limit exceeded. Please try again later.",
+        retryAfter: rateLimitResult.retryAfter
+      });
+    }
+
+    // 5. קריאת ה-Body (ב-Vercel Node זה לרוב מגיע כבר מפורסר)
+    const { messages } = req.body || {};
 
     if (!messages || !Array.isArray(messages)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid request format" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return res.status(400).json({ error: "Invalid request format" });
     }
 
-    // Get Gemini API key from environment variables
     const apiKey = process.env.GEMINI_API_KEY;
-    
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ 
-          error: "API key not configured. Please set GEMINI_API_KEY in environment variables." 
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
+      return res.status(500).json({ error: "API key not configured" });
     }
 
     // Function to send notification to ntfy.sh
@@ -530,41 +473,11 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
           }
         }
 
-        const responseBody = JSON.stringify({ message: responseText });
-        console.log("Sending response, body length:", responseBody.length);
-        console.log("Response body:", responseBody);
+        console.log("Sending response, text length:", responseText.length);
+        console.log("Response text preview:", responseText.substring(0, 100));
 
-        const responseHeaders = {
-          "Content-Type": "application/json; charset=utf-8",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-          "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-          "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        };
-
-        console.log("Response headers:", responseHeaders);
-        console.log("Returning response now...");
-
-        // Return response as string (Vercel handles encoding automatically)
-        // Ensure we're returning a proper Response object
-        const finalResponse = new Response(
-          responseBody,
-          { 
-            status: 200, 
-            statusText: "OK",
-            headers: responseHeaders
-          }
-        );
-        
-        console.log("Response created successfully");
-        console.log("Response type:", finalResponse.constructor.name);
-        console.log("Response body:", finalResponse.body ? "present" : "missing");
-        
-        // Ensure response is fully sent
-        return finalResponse;
+        // 6. החזרת התשובה בצורה תקינה ל-Vercel Node
+        return res.status(200).json({ message: responseText });
       } catch (fetchError) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
@@ -574,18 +487,9 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
         throw fetchError;
       }
   } catch (error) {
-    console.error("Chat API error:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || "An error occurred while processing your request." 
-      }),
-      { 
-        status: 500, 
-        headers: { 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        } 
-      }
-    );
+    console.error("Server Error:", error);
+    return res.status(500).json({ 
+      error: error.message || "Internal Server Error" 
+    });
   }
 }
