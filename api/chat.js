@@ -221,9 +221,23 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
     };
 
     async function getCheapestModel(apiKey) {
+        // Use environment variable if set, otherwise try to fetch
+        const envModel = process.env.GEMINI_MODEL;
+        if (envModel) {
+          console.log("Using model from GEMINI_MODEL env:", envModel);
+          return envModel;
+        }
+        
+        // Default to gemini-1.5-flash (most reliable free tier model)
+        // Skip model fetching to avoid delays and potential errors
+        console.log("Using default model: gemini-2.0-flash");
+        return "gemini-2.0-flash";
+        
+        /* Commented out to avoid delays - uncomment if you want to fetch available models
         try {
           const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+            { signal: AbortSignal.timeout(3000) } // 3 second timeout
           );
           
           if (!response.ok) {
@@ -267,43 +281,68 @@ Remember: You are representing Lidor professionally, so be accurate and helpful.
           // Fallback to default model
           return "gemini-1.5-flash";
         }
+        */
       }     
 
       
+      console.log("Getting model...");
       const model = await getCheapestModel(apiKey);
+      console.log("Model selected:", model);
       
-      const geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
+      console.log("Calling Gemini API...");
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      // Add timeout to prevent hanging (Vercel has 10s timeout for free tier)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout
+      
+      try {
+        const geminiResponse = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        console.log("Gemini API response status:", geminiResponse.status);
+
+        if (!geminiResponse.ok) {
+          const errorData = await geminiResponse.json().catch(() => ({ error: { message: "Unknown error" } }));
+          console.error("Gemini API error:", errorData);
+          throw new Error(errorData.error?.message || "Gemini API error");
         }
-      );
 
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.json();
-      console.error("Gemini API error:", errorData);
-      throw new Error(errorData.error?.message || "Gemini API error");
-    }
+        console.log("Parsing Gemini response...");
+        const data = await geminiResponse.json();
+        console.log("Gemini response received, extracting text...");
+        
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+        console.log("Response text length:", responseText.length);
 
-    const data = await geminiResponse.json();
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
-
-    return new Response(
-      JSON.stringify({ message: responseText }),
-      { 
-        status: 200, 
-        headers: { 
-          "Content-Type": "application/json",
-          "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
-          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-          "X-RateLimit-Reset": rateLimitResult.resetTime.toString()
+        return new Response(
+          JSON.stringify({ message: responseText }),
+          { 
+            status: 200, 
+            headers: { 
+              "Content-Type": "application/json",
+              "X-RateLimit-Limit": rateLimitConfig.maxRequests.toString(),
+              "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+              "X-RateLimit-Reset": rateLimitResult.resetTime.toString()
+            }
+          }
+        );
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.error("Request timeout after 8 seconds");
+          throw new Error("Request timeout. The API took too long to respond.");
         }
+        throw fetchError;
       }
-    );
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(
