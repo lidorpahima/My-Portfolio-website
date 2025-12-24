@@ -53,10 +53,24 @@ export function rateLimit(identifier, maxRequests = 10, windowMs = 60000) {
 }
 
 export function getClientIdentifier(req) {
+  // Handle both Web API Headers object and plain object
+  let headers;
+  if (req.headers instanceof Headers) {
+    // Web API Headers object (Vercel production)
+    headers = {
+      'x-forwarded-for': req.headers.get('x-forwarded-for'),
+      'x-real-ip': req.headers.get('x-real-ip'),
+      'cf-connecting-ip': req.headers.get('cf-connecting-ip'),
+    };
+  } else {
+    // Plain object (local development)
+    headers = req.headers || {};
+  }
+  
   // Try to get IP from various headers (for Vercel/proxies)
-  const forwarded = req.headers?.['x-forwarded-for'];
-  const realIp = req.headers?.['x-real-ip'];
-  const cfConnectingIp = req.headers?.['cf-connecting-ip'];
+  const forwarded = headers['x-forwarded-for'];
+  const realIp = headers['x-real-ip'];
+  const cfConnectingIp = headers['cf-connecting-ip'];
   
   // Get IP from headers (Vercel sets x-forwarded-for)
   const ip = forwarded?.split(',')[0]?.trim() || 

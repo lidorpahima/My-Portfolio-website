@@ -96,8 +96,13 @@ Aspiring to become a Full-Stack / AI Engineer, combining expertise in software d
 `;
 
 export default async function handler(req) {
+  // Handle both Vercel (Web API Request) and local development formats
+  // Vercel uses Web API Request object, local dev uses custom format
+  const isWebAPIRequest = req instanceof Request;
+  const method = isWebAPIRequest ? req.method : (req.method || "GET");
+  
   // Only allow POST requests
-  if (req.method !== "POST") {
+  if (method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { status: 405, headers: { "Content-Type": "application/json" } }
@@ -135,7 +140,25 @@ export default async function handler(req) {
   }
 
   try {
-    const body = await req.json();
+    // Handle body parsing for both Web API Request and custom format
+    let body;
+    if (isWebAPIRequest) {
+      // Vercel production - Web API Request (has json() method)
+      try {
+        body = await req.json();
+      } catch (error) {
+        // If json() fails, try to read as text and parse
+        const text = await req.text();
+        body = text ? JSON.parse(text) : {};
+      }
+    } else if (typeof req.json === "function") {
+      // Local development - custom format with json() method
+      body = await req.json();
+    } else {
+      // Fallback - body might already be parsed
+      body = req.body || {};
+    }
+    
     const { messages } = body;
 
     if (!messages || !Array.isArray(messages)) {
